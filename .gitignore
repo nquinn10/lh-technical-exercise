@@ -37,3 +37,6 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Local notes
+design-decisions.md
