@@ -1,0 +1,305 @@
+{% extends "care_plans/base.html" %}
+
+{% block title %}Create Order - Lamar Health{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Create Care Plan Order</h2>
+    </div>
+    <div class="card-body">
+        {% if warnings %}
+        <div class="warning-box">
+            <h4 class="mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+                </svg>
+                Potential Duplicates Detected
+            </h4>
+            <p class="mb-3">The following warnings were found. Please review and acknowledge to proceed:</p>
+            {% for warning in warnings %}
+            <div class="warning-item">
+                <strong>{{ warning.message }}</strong>
+            </div>
+            {% endfor %}
+            <div class="alert alert-info mt-3 mb-3" style="font-size: 0.9rem;">
+                <strong>Note:</strong> If you modify any form fields after acknowledging, you will need to re-acknowledge these warnings to ensure you're submitting the correct data.
+            </div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="acknowledge_warnings" name="acknowledge_warnings" value="1">
+                <label class="form-check-label" for="acknowledge_warnings">
+                    <strong>I have reviewed these warnings and want to proceed with this exact data</strong>
+                </label>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" id="orderForm" novalidate>
+            {% csrf_token %}
+
+            {% if warnings %}
+            <input type="hidden" name="acknowledge_warnings" id="acknowledge_warnings_hidden" value="">
+            {% endif %}
+
+            <!-- Patient Information -->
+            <div class="form-section">
+                <h3>Patient Information</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.patient_first_name.id_for_label }}" class="form-label">First Name *</label>
+                        {{ form.patient_first_name }}
+                        {% if form.patient_first_name.errors %}
+                            <div class="text-danger small">{{ form.patient_first_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.patient_last_name.id_for_label }}" class="form-label">Last Name *</label>
+                        {{ form.patient_last_name }}
+                        {% if form.patient_last_name.errors %}
+                            <div class="text-danger small">{{ form.patient_last_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.mrn.id_for_label }}" class="form-label">MRN (Medical Record Number) *</label>
+                    {{ form.mrn }}
+                    <div class="form-text">Must be exactly 6 digits</div>
+                    {% if form.mrn.errors %}
+                        <div class="text-danger small">{{ form.mrn.errors.0 }}</div>
+                    {% endif %}
+                    <div id="mrn-validation" class="small mt-1"></div>
+                </div>
+            </div>
+
+            <!-- Provider Information -->
+            <div class="form-section">
+                <h3>Provider Information</h3>
+                <div class="mb-3">
+                    <label for="{{ form.provider_name.id_for_label }}" class="form-label">Provider Name *</label>
+                    {{ form.provider_name }}
+                    {% if form.provider_name.errors %}
+                        <div class="text-danger small">{{ form.provider_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.provider_npi.id_for_label }}" class="form-label">NPI (National Provider Identifier) *</label>
+                    {{ form.provider_npi }}
+                    <div class="form-text">Must be exactly 10 digits</div>
+                    {% if form.provider_npi.errors %}
+                        <div class="text-danger small">{{ form.provider_npi.errors.0 }}</div>
+                    {% endif %}
+                    <div id="npi-validation" class="small mt-1"></div>
+                </div>
+            </div>
+
+            <!-- Clinical Information -->
+            <div class="form-section">
+                <h3>Clinical Information</h3>
+                <div class="mb-3">
+                    <label for="{{ form.primary_diagnosis.id_for_label }}" class="form-label">Primary Diagnosis (ICD-10) *</label>
+                    {{ form.primary_diagnosis }}
+                    <div class="form-text">e.g., E11.9 for Type 2 diabetes</div>
+                    {% if form.primary_diagnosis.errors %}
+                        <div class="text-danger small">{{ form.primary_diagnosis.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.medication_name.id_for_label }}" class="form-label">Medication Name *</label>
+                    {{ form.medication_name }}
+                    {% if form.medication_name.errors %}
+                        <div class="text-danger small">{{ form.medication_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.additional_diagnoses.id_for_label }}" class="form-label">Additional Diagnoses</label>
+                    {{ form.additional_diagnoses }}
+                    <div class="form-text">Comma-separated ICD-10 codes (optional)</div>
+                    {% if form.additional_diagnoses.errors %}
+                        <div class="text-danger small">{{ form.additional_diagnoses.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.medication_history.id_for_label }}" class="form-label">Medication History</label>
+                    {{ form.medication_history }}
+                    <div class="form-text">Comma-separated list of medications (optional)</div>
+                    {% if form.medication_history.errors %}
+                        <div class="text-danger small">{{ form.medication_history.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.patient_records.id_for_label }}" class="form-label">Patient Records *</label>
+                    {{ form.patient_records }}
+                    <div class="form-text">Full patient medical history and clinical notes</div>
+                    <div id="char-counter" class="char-counter">0 / 50,000 characters</div>
+                    {% if form.patient_records.errors %}
+                        <div class="text-danger small">{{ form.patient_records.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                    {% if warnings %}
+                    Review and Submit Order
+                    {% else %}
+                    Submit Order
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('orderForm');
+    const mrnInput = document.getElementById('{{ form.mrn.id_for_label }}');
+    const npiInput = document.getElementById('{{ form.provider_npi.id_for_label }}');
+    const recordsInput = document.getElementById('{{ form.patient_records.id_for_label }}');
+    const submitBtn = document.getElementById('submitBtn');
+    const acknowledgeCheckbox = document.getElementById('acknowledge_warnings');
+    const acknowledgeHidden = document.getElementById('acknowledge_warnings_hidden');
+
+    // MRN validation (6 digits)
+    if (mrnInput) {
+        mrnInput.addEventListener('blur', function() {
+            validateMRN();
+        });
+        mrnInput.addEventListener('input', function() {
+            validateMRN();
+        });
+    }
+
+    function validateMRN() {
+        const value = mrnInput.value;
+        const validationDiv = document.getElementById('mrn-validation');
+
+        if (value.length === 0) {
+            validationDiv.innerHTML = '';
+            return true;
+        }
+
+        if (!/^\d{6}$/.test(value)) {
+            validationDiv.innerHTML = '<span class="text-danger">✗ MRN must be exactly 6 digits</span>';
+            return false;
+        } else {
+            validationDiv.innerHTML = '<span class="text-success">✓ Valid MRN format</span>';
+            return true;
+        }
+    }
+
+    // NPI validation (10 digits)
+    if (npiInput) {
+        npiInput.addEventListener('blur', function() {
+            validateNPI();
+        });
+        npiInput.addEventListener('input', function() {
+            validateNPI();
+        });
+    }
+
+    function validateNPI() {
+        const value = npiInput.value;
+        const validationDiv = document.getElementById('npi-validation');
+
+        if (value.length === 0) {
+            validationDiv.innerHTML = '';
+            return true;
+        }
+
+        if (!/^\d{10}$/.test(value)) {
+            validationDiv.innerHTML = '<span class="text-danger">✗ NPI must be exactly 10 digits</span>';
+            return false;
+        } else {
+            validationDiv.innerHTML = '<span class="text-success">✓ Valid NPI format</span>';
+            return true;
+        }
+    }
+
+    // Character counter for patient records
+    if (recordsInput) {
+        recordsInput.addEventListener('input', function() {
+            updateCharCounter();
+        });
+        updateCharCounter();
+    }
+
+    function updateCharCounter() {
+        const length = recordsInput.value.length;
+        const counter = document.getElementById('char-counter');
+        counter.textContent = length.toLocaleString() + ' / 50,000 characters';
+
+        if (length > 50000) {
+            counter.classList.add('danger');
+            counter.classList.remove('warning');
+        } else if (length > 45000) {
+            counter.classList.add('warning');
+            counter.classList.remove('danger');
+        } else {
+            counter.classList.remove('warning', 'danger');
+        }
+    }
+
+    // Handle acknowledge checkbox
+    if (acknowledgeCheckbox && acknowledgeHidden) {
+        acknowledgeCheckbox.addEventListener('change', function() {
+            acknowledgeHidden.value = this.checked ? '1' : '';
+        });
+
+        // Clear acknowledgment if user changes any form field after seeing warnings
+        const formInputs = form.querySelectorAll('input, textarea, select');
+        formInputs.forEach(function(input) {
+            // Skip the acknowledge checkbox itself
+            if (input.id !== 'acknowledge_warnings' && input.id !== 'acknowledge_warnings_hidden') {
+                input.addEventListener('input', function() {
+                    if (acknowledgeCheckbox.checked) {
+                        acknowledgeCheckbox.checked = false;
+                        acknowledgeHidden.value = '';
+                        // Show alert to inform user
+                        const warningBox = document.querySelector('.warning-box');
+                        if (warningBox) {
+                            warningBox.style.border = '2px solid #ffc107';
+                            setTimeout(function() {
+                                warningBox.style.border = '1px solid #ffc107';
+                            }, 500);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Validate MRN and NPI format
+        if (mrnInput && !validateMRN()) {
+            isValid = false;
+        }
+        if (npiInput && !validateNPI()) {
+            isValid = false;
+        }
+
+        // Check character limit
+        if (recordsInput && recordsInput.value.length > 50000) {
+            isValid = false;
+            alert('Patient records exceed 50,000 character limit. Please shorten the text.');
+        }
+
+        // Check warnings acknowledgment
+        if (acknowledgeCheckbox && !acknowledgeCheckbox.checked) {
+            isValid = false;
+            alert('Please acknowledge the warnings by checking the box before submitting.');
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

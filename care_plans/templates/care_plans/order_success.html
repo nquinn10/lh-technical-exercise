@@ -1,0 +1,80 @@
+{% extends "care_plans/base.html" %}
+
+{% block title %}Order Created - Lamar Health{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h2 class="mb-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+            </svg>
+            Order Successfully Created
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <h4 class="alert-heading">Order #{{ order.id }} has been created!</h4>
+            <p class="mb-0">The order has been saved to the system. Next step: Generate the care plan using AI.</p>
+        </div>
+
+        <h3 class="mt-4 mb-3">Order Details</h3>
+
+        <div class="form-section">
+            <h3>Patient Information</h3>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Name:</dt>
+                <dd class="col-sm-9">{{ order.patient.first_name }} {{ order.patient.last_name }}</dd>
+
+                <dt class="col-sm-3">MRN:</dt>
+                <dd class="col-sm-9">{{ order.patient.mrn }}</dd>
+            </dl>
+        </div>
+
+        <div class="form-section">
+            <h3>Provider Information</h3>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Name:</dt>
+                <dd class="col-sm-9">{{ order.provider.name }}</dd>
+
+                <dt class="col-sm-3">NPI:</dt>
+                <dd class="col-sm-9">{{ order.provider.npi }}</dd>
+            </dl>
+        </div>
+
+        <div class="form-section">
+            <h3>Clinical Information</h3>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Primary Diagnosis:</dt>
+                <dd class="col-sm-9">{{ order.primary_diagnosis }}</dd>
+
+                <dt class="col-sm-3">Medication:</dt>
+                <dd class="col-sm-9">{{ order.medication_name }}</dd>
+
+                {% if order.additional_diagnoses %}
+                <dt class="col-sm-3">Additional Diagnoses:</dt>
+                <dd class="col-sm-9">{{ order.additional_diagnoses }}</dd>
+                {% endif %}
+
+                {% if order.medication_history %}
+                <dt class="col-sm-3">Medication History:</dt>
+                <dd class="col-sm-9">{{ order.medication_history }}</dd>
+                {% endif %}
+
+                <dt class="col-sm-3">Patient Records:</dt>
+                <dd class="col-sm-9">
+                    <div style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                        {{ order.patient_records|linebreaks }}
+                    </div>
+                </dd>
+            </dl>
+        </div>
+
+        <div class="d-grid gap-2 mt-4">
+            <a href="{% url 'create_order' %}" class="btn btn-primary btn-lg">Create Another Order</a>
+            <a href="/admin/care_plans/order/{{ order.id }}/change/" class="btn btn-outline-secondary" target="_blank">View in Admin</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
