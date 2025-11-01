@@ -4,7 +4,6 @@ from .models import Provider, Patient, Order, CarePlan
 
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
-    """Admin interface for Provider model"""
     list_display = ['name', 'npi', 'created_at']
     search_fields = ['name', 'npi']
     readonly_fields = ['created_at']
@@ -13,7 +12,6 @@ class ProviderAdmin(admin.ModelAdmin):
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    """Admin interface for Patient model"""
     list_display = ['first_name', 'last_name', 'mrn', 'created_at']
     search_fields = ['first_name', 'last_name', 'mrn']
     readonly_fields = ['created_at']
@@ -22,7 +20,6 @@ class PatientAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    """Admin interface for Order model"""
     list_display = ['id', 'patient', 'medication_name', 'provider', 'created_at']
     list_filter = ['created_at', 'medication_name']
     search_fields = ['patient__mrn', 'patient__last_name', 'medication_name']
@@ -51,7 +48,6 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(CarePlan)
 class CarePlanAdmin(admin.ModelAdmin):
-    """Admin interface for CarePlan model"""
     list_display = ['id', 'order', 'generated_at']
     search_fields = ['order__patient__mrn', 'order__id']
     readonly_fields = ['generated_at']
