@@ -48,9 +48,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(CarePlan)
 class CarePlanAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order', 'generated_at']
+    list_display = ['id', 'order', 'generated_at', 'updated_at']
     search_fields = ['order__patient__mrn', 'order__id']
-    readonly_fields = ['generated_at']
+    readonly_fields = ['generated_at', 'updated_at']
     list_per_page = 25
 
     fieldsets = (
@@ -60,8 +60,8 @@ class CarePlanAdmin(admin.ModelAdmin):
         ('Generated Care Plan', {
             'fields': ('care_plan_text',)
         }),
-        ('Metadata', {
-            'fields': ('generated_at',),
+        ('Timestamps', {
+            'fields': ('generated_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )

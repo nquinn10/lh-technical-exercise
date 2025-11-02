@@ -56,6 +56,13 @@
             <div class="alert alert-info" style="font-size: 0.9rem;">
                 <strong>Review & Edit:</strong> The care plan below is editable. Review the AI-generated content and make any necessary adjustments before saving or downloading.
             </div>
+
+            <p class="text-muted" style="font-size: 0.875rem;">
+                <strong>Generated:</strong> {{ care_plan.generated_at|date:"Y-m-d H:i:s" }}
+                {% if care_plan.updated_at != care_plan.generated_at %}
+                | <strong>Last Updated:</strong> {{ care_plan.updated_at|date:"Y-m-d H:i:s" }}
+                {% endif %}
+            </p>
             <form method="post" action="{% url 'update_care_plan' order.id %}" id="carePlanForm">
                 {% csrf_token %}
                 <textarea
