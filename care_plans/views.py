@@ -1,6 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from .forms import OrderForm
-from .models import Provider, Patient, Order
+from .models import Provider, Patient, Order, CarePlan
+from .llm import generate_care_plan
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 def create_order(request):
@@ -48,9 +54,32 @@ def create_order(request):
 def order_success(request, order_id):
     """
     Display success page after order creation
+
+    Attempts to generate care plan via Claude API. If care plan already exists
+    or API fails, shows order details with appropriate messaging.
     """
     order = get_object_or_404(Order, id=order_id)
-    return render(request, 'care_plans/order_success.html', {'order': order})
+    care_plan = None
+    error_message = None
+
+    # Check if care plan already exists
+    try:
+        care_plan = order.care_plan
+    except CarePlan.DoesNotExist:
+        # Generate new care plan
+        try:
+            care_plan = generate_care_plan(order)
+            logger.info(f"Successfully generated care plan for order {order_id}")
+        except Exception as e:
+            # Log error but don't crash - order is already saved
+            logger.error(f"Failed to generate care plan for order {order_id}: {str(e)}")
+            error_message = "Unable to generate care plan at this time. The order has been saved successfully. You can retry generation later."
+
+    return render(request, 'care_plans/order_success.html', {
+        'order': order,
+        'care_plan': care_plan,
+        'error_message': error_message
+    })
 
 
 def save_order(cleaned_data):
@@ -85,3 +114,48 @@ def save_order(cleaned_data):
     )
 
     return order
+
+
+def update_care_plan(request, order_id):
+    """
+    Update care plan text after pharmacist review/edits
+
+    Allows pharmacists to modify AI-generated care plans before finalizing.
+    """
+    if request.method != 'POST':
+        return redirect('order_success', order_id=order_id)
+
+    order = get_object_or_404(Order, id=order_id)
+    care_plan = get_object_or_404(CarePlan, order=order)
+
+    # Update care plan text with edited content
+    updated_text = request.POST.get('care_plan_text', '')
+    if updated_text:
+        care_plan.care_plan_text = updated_text
+        care_plan.save()
+        logger.info(f"Care plan updated for order {order_id}")
+
+    # Redirect back to success page with success message
+    from django.contrib import messages
+    messages.success(request, 'Care plan changes saved successfully!')
+    return redirect('order_success', order_id=order_id)
+
+
+def download_care_plan(request, order_id):
+    """
+    Download care plan as text file
+
+    Filename format: care_plan_MRN{mrn}_{timestamp}.txt
+    """
+    order = get_object_or_404(Order, id=order_id)
+    care_plan = get_object_or_404(CarePlan, order=order)
+
+    # Generate filename
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"care_plan_MRN{order.patient.mrn}_{timestamp}.txt"
+
+    # Create response with text file
+    response = HttpResponse(care_plan.care_plan_text, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
