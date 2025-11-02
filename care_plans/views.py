@@ -4,6 +4,7 @@ from .forms import OrderForm
 from .models import Provider, Patient, Order, CarePlan
 from .llm import generate_care_plan
 import logging
+import csv
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -158,4 +159,79 @@ def download_care_plan(request, order_id):
     response = HttpResponse(care_plan.care_plan_text, content_type='text/plain')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
+    return response
+
+
+def orders_list(request):
+    """
+    Display all orders in a table format
+
+    Shows Order ID, Date, Patient, MRN, Medication, and Provider.
+    Orders are sorted by most recent first.
+    """
+    orders = Order.objects.select_related('patient', 'provider').all().order_by('-created_at')
+
+    return render(request, 'care_plans/orders_list.html', {
+        'orders': orders
+    })
+
+
+def export_csv(request):
+    """
+    Export all orders to CSV for pharma reporting
+
+    CSV includes: order_id, order_date, patient_mrn, patient_first_name,
+    patient_last_name, provider_name, provider_npi, primary_diagnosis,
+    medication_name, additional_diagnoses, medication_history, care_plan_text
+    """
+    # Create response with CSV content type
+    response = HttpResponse(content_type='text/csv')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="orders_export_{timestamp}.csv"'
+
+    # Create CSV writer
+    writer = csv.writer(response)
+
+    # Write header row
+    writer.writerow([
+        'Order ID',
+        'Order Date',
+        'Patient MRN',
+        'Patient First Name',
+        'Patient Last Name',
+        'Provider Name',
+        'Provider NPI',
+        'Primary Diagnosis',
+        'Medication Name',
+        'Additional Diagnoses',
+        'Medication History',
+        'Care Plan Text'
+    ])
+
+    # Write data rows
+    orders = Order.objects.select_related('patient', 'provider').all().order_by('-created_at')
+
+    for order in orders:
+        # Get care plan text if it exists
+        try:
+            care_plan_text = order.care_plan.care_plan_text
+        except CarePlan.DoesNotExist:
+            care_plan_text = ''
+
+        writer.writerow([
+            order.id,
+            order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            order.patient.mrn,
+            order.patient.first_name,
+            order.patient.last_name,
+            order.provider.name,
+            order.provider.npi,
+            order.primary_diagnosis,
+            order.medication_name,
+            order.additional_diagnoses,
+            order.medication_history,
+            care_plan_text
+        ])
+
+    logger.info(f"CSV export generated with {orders.count()} orders")
     return response
