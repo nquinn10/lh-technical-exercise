@@ -3,6 +3,18 @@
 {% block title %}Create Order - Lamar Health{% endblock %}
 
 {% block content %}
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="text-align: center; color: white;">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; margin-bottom: 1rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4>Generating Care Plan...</h4>
+        <p>Please wait while we analyze the patient records and generate a comprehensive care plan.</p>
+        <p style="font-size: 0.9rem; margin-top: 1rem;">This typically takes 15-45 seconds depending on record complexity.</p>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">Create Care Plan Order</h2>
@@ -146,6 +158,13 @@
                     Submit Order
                     {% endif %}
                 </button>
+                <button type="button" class="btn btn-outline-secondary" id="clearBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                    Clear Form
+                </button>
             </div>
         </form>
     </div>
@@ -272,6 +291,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Clear form button
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
+                form.reset();
+                // Clear validation messages
+                const mrnValidation = document.getElementById('mrn-validation');
+                const npiValidation = document.getElementById('npi-validation');
+                const charCounter = document.getElementById('char-counter');
+                if (mrnValidation) mrnValidation.innerHTML = '';
+                if (npiValidation) npiValidation.innerHTML = '';
+                if (charCounter) charCounter.textContent = '0 / 50,000 characters';
+                charCounter.className = 'char-counter';
+            }
+        });
+    }
+
     // Form submission validation
     form.addEventListener('submit', function(e) {
         let isValid = true;
@@ -298,6 +335,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!isValid) {
             e.preventDefault();
+        } else {
+            // Show loading overlay when form is valid and submitting
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
         }
     });
 });
