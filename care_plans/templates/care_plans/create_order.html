@@ -296,15 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
-                form.reset();
-                // Clear validation messages
-                const mrnValidation = document.getElementById('mrn-validation');
-                const npiValidation = document.getElementById('npi-validation');
-                const charCounter = document.getElementById('char-counter');
-                if (mrnValidation) mrnValidation.innerHTML = '';
-                if (npiValidation) npiValidation.innerHTML = '';
-                if (charCounter) charCounter.textContent = '0 / 50,000 characters';
-                charCounter.className = 'char-counter';
+                // Navigate to the create order page to get a fresh form without warnings
+                window.location.href = window.location.pathname;
             }
         });
     }

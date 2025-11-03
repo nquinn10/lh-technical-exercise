@@ -12,32 +12,30 @@ logger = logging.getLogger(__name__)
 
 def create_order(request):
     """
-    Handle order creation form submission
+    Handle order creation form submission with duplicate warnings
 
     Flow:
     1. GET request: Show empty form
     2. POST request: Validate form
        - If validation errors: Show form with errors
-       - If warnings and not acknowledged: Show form with warnings
-       - If warnings acknowledged but no longer present: Process normally
-       - If valid (and warnings acknowledged): Save order and redirect
-
-    Warning acknowledgment is tied to specific form data. If the user changes
-    any fields after seeing warnings, they must re-acknowledge.
+       - If warnings and not acknowledged: Show warnings
+       - If warnings and acknowledged: Save order
+       - If no warnings: Save order
     """
     if request.method == 'POST':
         form = OrderForm(request.POST)
 
         if form.is_valid():
-            # Check if form has warnings
             if form.has_warnings():
-                # User acknowledged warnings - verify they're for THIS form data
+                # Check if user acknowledged warnings
                 if request.POST.get('acknowledge_warnings'):
-                    # Warnings exist but user acknowledged - allow submission
+                    # User acknowledged - proceed
                     order = save_order(form.cleaned_data)
+                    logger.info(f"Order created with warnings acknowledged: {order.id}")
                     return redirect('order_success', order_id=order.id)
                 else:
-                    # Warnings exist and not acknowledged - show warnings
+                    # Show warnings for acknowledgment
+                    logger.info("Warnings detected - displaying to user")
                     return render(request, 'care_plans/create_order.html', {
                         'form': form,
                         'warnings': form.get_warnings()
@@ -45,8 +43,10 @@ def create_order(request):
             else:
                 # No warnings - proceed normally
                 order = save_order(form.cleaned_data)
+                logger.info(f"Order created without warnings: {order.id}")
                 return redirect('order_success', order_id=order.id)
     else:
+        # GET request - show empty form
         form = OrderForm()
 
     return render(request, 'care_plans/create_order.html', {'form': form})

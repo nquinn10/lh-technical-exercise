@@ -99,7 +99,7 @@ class OrderCreationViewTests(TestCase):
         )
 
         data = self.get_valid_form_data()
-        data['acknowledge_warnings'] = 'on'  # Acknowledge checkbox
+        data['acknowledge_warnings'] = 'on'
         response = self.client.post(self.url, data=data)
 
         # Order should be created despite warnings
