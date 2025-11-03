@@ -140,8 +140,22 @@ Error handling: Connection failures, rate limits, authentication errors, invalid
 
 ## Deployment
 
-[Live deployment information will be added here]
+**Live Application:** [https://web-production-be91f.up.railway.app/](https://web-production-be91f.up.railway.app/)
 
----
+**Demo Credentials:** Shared separately via email
 
-Built with Django • Powered by Claude AI
+**Deployment Details:**
+- **Platform:** Railway
+- **Region:** US West (California)
+- **Database:** PostgreSQL (managed by Railway)
+- **Server:** Gunicorn with 120s timeout for AI generation
+- **Static Files:** WhiteNoise for efficient static file serving
+- **Security:** HTTP Basic Authentication, SSL/TLS encryption, secure cookies
+
+**Environment Variables:**
+- `DATABASE_URL`: PostgreSQL connection (Railway managed)
+- `ANTHROPIC_API_KEY`: Claude AI API key
+- `SECRET_KEY`: Django secret key for production
+- `DEBUG`: Set to `False` for production
+- `ALLOWED_HOSTS`: Railway domain
+- `BASIC_AUTH_ENABLED`: `True`
