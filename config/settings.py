@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'config.middleware.BasicAuthMiddleware',  # HTTP Basic Auth for production
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -149,3 +150,8 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+# HTTP Basic Authentication (for production demo protection)
+BASIC_AUTH_ENABLED = config('BASIC_AUTH_ENABLED', default=False, cast=bool)
+BASIC_AUTH_USERNAME = config('BASIC_AUTH_USERNAME', default='admin')
+BASIC_AUTH_PASSWORD = config('BASIC_AUTH_PASSWORD', default='changeme')
