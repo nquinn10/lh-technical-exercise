@@ -40,3 +40,6 @@ htmlcov/
 
 # Local notes
 design-decisions.md
+flow.md
+plan.md
+testing.md
