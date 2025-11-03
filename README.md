@@ -125,6 +125,11 @@ Error handling: Connection failures, rate limits, authentication errors, invalid
 - Have we over-engineered anything that isn't a concern in practice?
 - What features are "nice to have" vs actually needed for daily workflow?
 
+**AI Care Plan Quality:**
+- How is the quality of AI-generated care plans? Are they meeting clinical standards?
+- What adjustments to prompting, context, or output format would improve usefulness?
+- Should we provide pharmacists with tools to customize the AI prompt for different use cases?
+
 ## Potential Improvements
 
 **Based on prototype experience:**
