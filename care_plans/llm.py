@@ -47,6 +47,38 @@ def generate_care_plan(order):
     return care_plan
 
 
+def get_previous_care_plans_for_medication(medication_name, current_order_id=None, limit=3):
+    """
+    Retrieve previous care plans for the same or similar medication.
+    Uses fuzzy matching to find related medications.
+
+    Args:
+        medication_name: Name of the medication to search for
+        current_order_id: Optional Order ID to exclude from results
+        limit: Maximum number of care plans to return (default: 3)
+
+    Returns:
+        List of CarePlan instances, ordered by most recent first
+    """
+    # Get orders with similar medication names that have care plans
+    orders_query = Order.objects.filter(
+        medication_name__icontains=medication_name
+    ).exclude(
+        care_plan__isnull=True  # Only include orders with care plans
+    )
+
+    # Exclude current order if specified
+    if current_order_id:
+        orders_query = orders_query.exclude(id=current_order_id)
+
+    # Get most recent care plans
+    care_plans = CarePlan.objects.filter(
+        order__in=orders_query
+    ).select_related('order').order_by('-generated_at')[:limit]
+
+    return list(care_plans)
+
+
 def get_system_prompt():
     """
     System prompt defining Claude's role and output format
@@ -99,13 +131,13 @@ Use clinical abbreviations appropriately (e.g., PO, q6h, SCr, eGFR, FVC)."""
 
 def build_care_plan_prompt(order):
     """
-    Build user prompt with all order data
+    Build user prompt with all order data, including previous care plans for similar medications
 
     Args:
         order: Order instance
 
     Returns:
-        str: Formatted prompt with patient data
+        str: Formatted prompt with patient data and medication context
     """
     patient = order.patient
     provider = order.provider
@@ -129,7 +161,30 @@ PATIENT & PROVIDER INFORMATION:
     prompt += f"""
 
 DETAILED PATIENT MEDICAL RECORDS:
-{order.patient_records}
+{order.patient_records}"""
+
+    # Add previous care plans for similar medications as context
+    previous_care_plans = get_previous_care_plans_for_medication(
+        medication_name=order.medication_name,
+        current_order_id=order.id,
+        limit=3
+    )
+
+    if previous_care_plans:
+        prompt += "\n\n---\n\nPREVIOUS CARE PLANS FOR SIMILAR MEDICATIONS:"
+        prompt += "\nThe following are recent care plans for similar medications. Use these as reference examples, "
+        prompt += "and note any differences or enhancements compared to the current patient's needs.\n"
+
+        for idx, care_plan in enumerate(previous_care_plans, 1):
+            care_plan_order = care_plan.order
+            prompt += f"\n\n--- REFERENCE CARE PLAN {idx} ---"
+            prompt += f"\nMedication: {care_plan_order.medication_name}"
+            prompt += f"\nPrimary Diagnosis: {care_plan_order.primary_diagnosis}"
+            prompt += f"\nGenerated: {care_plan.generated_at.strftime('%Y-%m-%d')}"
+            prompt += f"\n\nCare Plan Content:\n{care_plan.care_plan_text}\n"
+            prompt += f"--- END REFERENCE CARE PLAN {idx} ---\n"
+
+    prompt += """
 
 ---
 
@@ -140,5 +195,10 @@ Based on the patient medical records above, generate a complete pharmacist care 
 - Establishing a comprehensive monitoring schedule with specific timing
 
 The patient medical records contain the most important clinical context - use them as your primary source for clinical decision-making."""
+
+    if previous_care_plans:
+        prompt += """
+
+If reference care plans were provided above, use them as examples of quality and clinical detail, but tailor your care plan specifically to this patient's unique medical situation. Note any relevant differences or enhancements compared to the reference examples."""
 
     return prompt
